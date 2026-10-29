@@ -2,38 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const phrases = [
-  { label: "I, me, mine", icon: "🚶", color: "yellow" },
-  { label: "want", icon: "🙋", color: "green" },
-  { label: "go", icon: "➜", color: "green" },
-  { label: "look, see", icon: "👀", color: "blue" },
-  { label: "what", icon: "📦?", color: "white" },
-  { label: "something’s wrong", icon: "🤕", color: "pink" },
-  { label: "you, your", icon: "🧍‍♂️🧍", color: "yellow" },
-  { label: "help", icon: "🖐️", color: "green" },
-  { label: "stop", icon: "🛑", color: "green" },
-  { label: "choose", icon: "☝️🍒", color: "green" },
-  { label: "good", icon: "👍", color: "blue" },
-  { label: "say it again", icon: "💬↶", color: "pink" },
-  { label: "finish", icon: "🙅", color: "green" },
-  { label: "like", icon: "💗", color: "green" },
-  { label: "wait", icon: "🚶⏸", color: "green" },
-  { label: "turn", icon: "⟲", color: "green" },
-  { label: "different", icon: "🔷△", color: "blue" },
-  { label: "out", icon: "↗", color: "white" },
-  { label: "more", icon: "⟳", color: "blue" },
-  { label: "not", icon: "╱", color: "white" },
-  { label: "hurt", icon: "🤕", color: "green" },
-  { label: "play", icon: "⚽", color: "green" },
-  { label: "same", icon: "🔹🔹", color: "blue" },
-  { label: "whoops", icon: "💭", color: "white" },
-  { label: "water", icon: "💧", color: "blue" },
-  { label: "eat", icon: "🍽️", color: "yellow" },
-  { label: "bathroom", icon: "🚻", color: "blue" },
-  { label: "yes", icon: "✓", color: "green" },
-  { label: "no", icon: "✕", color: "white" },
-] as const;
+import { phrases } from "./phrases";
+import PhoneCommunicationApp from "./PhoneCommunicationApp";
 
 type PhraseIndex = number;
 
@@ -90,7 +60,7 @@ export default function CommunicationSimulator({ phoneMode = false }: { phoneMod
         if (phrases.length > 1 && next === current) next = (next + 1) % phrases.length;
         return next;
       });
-    }, 850);
+    }, 2200);
     return () => window.clearInterval(interval);
   }, [phoneMode, reduceMotion]);
 
@@ -111,7 +81,7 @@ export default function CommunicationSimulator({ phoneMode = false }: { phoneMod
         if (next === index) next = (next + 1) % phrases.length;
         setCursorIndex(next);
         step += 1;
-        window.setTimeout(roam, 310);
+        window.setTimeout(roam, 900);
         return;
       }
       setCursorIndex(index);
@@ -120,7 +90,7 @@ export default function CommunicationSimulator({ phoneMode = false }: { phoneMod
       setPopupIndex(index);
       speak(phrases[index].label);
     };
-    window.setTimeout(roam, reduceMotion ? 0 : 160);
+    window.setTimeout(roam, reduceMotion ? 0 : 350);
   };
 
   const closePopup = () => {
@@ -140,10 +110,10 @@ export default function CommunicationSimulator({ phoneMode = false }: { phoneMod
       <section className="sim-intro">
         <div className="sim-eyebrow"><span /> SIMULATED COMMUNICATION BOARD</div>
         <h1>{phoneMode ? <>A word can open<br /><em>a conversation.</em></> : <>Everyday words.<br /><em>At your fingertips.</em></>}</h1>
-        <p>{phoneMode ? "Tap a phrase on the phone to see the cursor find it on the board. The selected word will appear and be spoken aloud." : "A communication board can make simple messages easier to share. Watch the selection cursor explore, then try the phone controls."}</p>
+        <p>{phoneMode ? "Tap a phrase on the companion app to see the cursor find it on the board. The selected word will appear and be spoken aloud." : "A communication board can make simple messages easier to share. Choose a phrase in the companion app and watch it appear here."}</p>
       </section>
 
-      <section className={`simulator-layout ${phoneMode ? "with-phone" : ""}`} aria-label={phoneMode ? "Phone communication simulator" : "Communication board simulator"}>
+      <section className="simulator-layout with-phone" aria-label={phoneMode ? "Phone communication simulator" : "Communication board simulator with companion app"}>
         <div className="board-panel">
           <div className="board-toolbar"><div><span className="toolbar-dot" /> AMPLIFY / MESSAGE BOARD</div><span>{phrases.length} MESSAGES</span></div>
           <div className="communication-board" ref={boardRef}>
@@ -153,38 +123,12 @@ export default function CommunicationSimulator({ phoneMode = false }: { phoneMod
                 <span className="tile-word">{phrase.label}</span>
               </div>)}
             </div>
-            <motion.div className={`board-cursor ${searching ? "cursor-searching" : ""}`} aria-hidden="true" animate={{ x: cursorPoint.x - 15, y: cursorPoint.y - 15 }} transition={reduceMotion ? { duration: 0 } : searching ? { type: "spring", stiffness: 170, damping: 18 } : { type: "spring", stiffness: 85, damping: 14 }}><span /></motion.div>
+            <motion.div className={`board-cursor ${searching ? "cursor-searching" : ""}`} aria-hidden="true" animate={{ x: cursorPoint.x - 15, y: cursorPoint.y - 15 }} transition={reduceMotion ? { duration: 0 } : searching ? { duration: .95, ease: "easeInOut" } : { duration: 1.55, ease: "easeInOut" }}><span /></motion.div>
           </div>
           <div className="board-status"><span className={searching ? "status-waiting" : ""} />{searching ? "Finding your message…" : phoneMode ? "Phone connected · simulated selection" : "Selection preview · simulated cursor"}</div>
         </div>
 
-        {phoneMode ? <aside className="phone-column" aria-label="Phone controls">
-          <div className="phone-caption"><span>AMPLIFY COMPANION</span><span><i /> CONNECTED</span></div>
-          <div className="sim-phone">
-            <div className="sim-phone-island" />
-            <div className="sim-phone-screen">
-              <div className="sim-phone-status"><span>9:41</span><span>•••</span></div>
-              <div className="sim-phone-brand"><span className="sim-brand-icon">a</span> amplify <span className="phone-user">A</span></div>
-              <div className="phone-greeting">What would you like to say?</div>
-              <div className="phone-hint">TAP A WORD TO SELECT IT</div>
-              <div className="phone-word-grid">
-                {phrases.map((phrase, index) => <button type="button" key={phrase.label} className={`phone-word-button phone-tile-${phrase.color} ${selectedIndex === index ? "phone-word-active" : ""}`} onClick={() => selectPhrase(index)} disabled={searching} aria-pressed={selectedIndex === index}>
-                  <span aria-hidden="true">{phrase.icon}</span><b>{phrase.label}</b>
-                </button>)}
-              </div>
-              <div className="sim-phone-home" />
-            </div>
-          </div>
-          <p className="phone-caption-note">Tap any phrase. The board cursor will find and speak it.</p>
-        </aside> : <aside className="board-instructions">
-          <div className="instruction-icon" aria-hidden="true">✳</div>
-          <span className="instruction-kicker">A SIMULATED EXPERIENCE</span>
-          <h2>See the selection<br />come to life.</h2>
-          <p>The cursor wanders through the board to show how a message could be selected. Try the phone demo to choose a word yourself.</p>
-          <a className="sim-cta" href="/phone/demo">Try the phone demo <span>→</span></a>
-          <div className="instruction-divider" />
-          <div className="instruction-foot"><span className="signal-led" /> All messages and signals are simulated.</div>
-        </aside>}
+        <PhoneCommunicationApp selectedIndex={selectedIndex} searching={searching} onSelect={selectPhrase} />
       </section>
 
       <footer className="sim-footer"><span>AMPLIFY / GIVING EVERYONE A VOICE</span><a href="/">Back to Amplify <span>↗</span></a><span>PROTOTYPE CONCEPT · NOT A MEDICAL DEVICE</span></footer>

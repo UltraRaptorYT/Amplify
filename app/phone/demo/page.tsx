@@ -1,4 +1,4 @@
-import CommunicationSimulator from "../../simulator/CommunicationSimulator";
+import PhoneCommunicationApp from "../../simulator/PhoneCommunicationApp";
 
 export const metadata = {
   title: "Phone Simulator | Amplify",
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function PhoneDemoPage() {
-  return <CommunicationSimulator phoneMode />;
+  return <PhoneCommunicationApp />;
 }

@@ -5,6 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { phrases } from "./phrases";
 import { publishStorageFallback, SIMULATOR_CHANNEL, SIMULATOR_STORAGE_KEY, type SimulatorMessage } from "./channel";
 
+function speak(message: string) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.rate = 0.82;
+  window.speechSynthesis.speak(utterance);
+}
+
 export default function CommunicationSimulator() {
   const reduceMotion = useReducedMotion();
   const boardRef = useRef<HTMLDivElement>(null);
@@ -42,6 +50,7 @@ export default function CommunicationSimulator() {
     setSelectedIndex(index);
     setCursorIndex(index);
     setPhoneConnected(true);
+    speak(phrases[index].label);
   }, []);
 
   useEffect(() => {
@@ -72,25 +81,13 @@ export default function CommunicationSimulator() {
       try { acceptMessage(JSON.parse(event.newValue) as SimulatorMessage); } catch { /* Ignore malformed local demo events. */ }
     };
     window.addEventListener("storage", onStorage);
-    return () => { channel?.close(); channelRef.current = null; window.removeEventListener("storage", onStorage); if (connectionTimer.current) window.clearTimeout(connectionTimer.current); };
+    return () => { channel?.close(); channelRef.current = null; window.removeEventListener("storage", onStorage); if (connectionTimer.current) window.clearTimeout(connectionTimer.current); window.speechSynthesis?.cancel(); };
   }, [acceptMessage]);
 
   return (
-    <main className="simulator-page board-demo-page">
-      <header className="sim-header">
-        <a className="sim-brand" href="/"><span className="sim-brand-icon">a</span> amplify <i>/</i> communication board</a>
-        <a className="board-phone-link" href="/phone/demo" target="_blank" rel="noreferrer">Open phone app <span>↗</span></a>
-      </header>
-
-      <section className="sim-intro board-intro">
-        <div className="sim-eyebrow"><span /> SIMULATED COMMUNICATION BOARD</div>
-        <h1>Everyday words.<br /><em>At your fingertips.</em></h1>
-        <p>Keep the phone app open in another tab. Tap a phrase there and watch the board select and speak it here.</p>
-      </section>
-
-      <section className="board-only-layout" aria-label="Communication board">
+    <main className="simulator-page board-demo-page" aria-label="Amplify communication board">
+      <section className="board-only-layout">
         <div className="board-panel board-only-panel">
-          <div className="board-toolbar"><div><span className="toolbar-dot" /> AMPLIFY / MESSAGE BOARD</div><span>{phrases.length} MESSAGES</span></div>
           <div className="communication-board" ref={boardRef}>
             <div className="communication-grid">
               {phrases.map((phrase, index) => <div className={`communication-tile tile-${phrase.color} ${selectedIndex === index ? "tile-selected" : ""}`} key={phrase.label} ref={(element) => { tileRefs.current[index] = element; }}>
@@ -99,11 +96,9 @@ export default function CommunicationSimulator() {
             </div>
             <motion.div className={`board-cursor ${selectedIndex !== null ? "cursor-selected" : ""}`} aria-hidden="true" animate={{ x: cursorPoint.x - 15, y: cursorPoint.y - 15 }} transition={reduceMotion ? { duration: 0 } : { duration: selectedIndex === null ? 2 : 1.8, ease: "easeInOut" }}><span /></motion.div>
           </div>
-          <div className="board-status"><span className={phoneConnected ? "status-connected" : "status-disconnected"} />{selectedIndex !== null ? `Selected from phone · “${phrases[selectedIndex].label}”` : phoneConnected ? "Phone app connected · waiting for a phrase" : "Waiting for the phone app to connect"}</div>
+          <div className="board-status" aria-live="polite"><span className={phoneConnected ? "status-connected" : "status-disconnected"} />{selectedIndex !== null ? `“${phrases[selectedIndex].label}”` : phoneConnected ? "Ready" : "Waiting for phone app"}</div>
         </div>
       </section>
-
-      <footer className="sim-footer"><span>AMPLIFY / GIVING EVERYONE A VOICE</span><a href="/">Back to Amplify <span>↗</span></a><span>SIMULATED MESSAGES · PROTOTYPE CONCEPT</span></footer>
     </main>
   );
 }

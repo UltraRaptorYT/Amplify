@@ -1,8 +1,8 @@
 import PhoneCommunicationApp from "../../simulator/PhoneCommunicationApp";
 
 export const metadata = {
-  title: "Phone Simulator | Amplify",
-  description: "Choose a phrase in the simulated Amplify companion app and watch it appear on the communication board.",
+  title: "Amplify Phone App | Communication Simulator",
+  description: "A simulated phone communication board that sends chosen phrases to the Amplify demo page.",
 };
 
 export default function PhoneDemoPage() {

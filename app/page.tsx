@@ -130,7 +130,7 @@ export default function Home() {
     <main>
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Amplify home"><BrandMark /><span>amplify</span></a>
-        <nav className="desktop-nav" aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#experience">Experience</a><a href="#about">Our vision</a></nav>
+        <nav className="desktop-nav" aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#experience">Experience</a><a href="/demo">Simulator</a><a href="#about">Our vision</a></nav>
         <a className="header-cta" href="#waitlist">Get early access <Arrow diagonal /></a>
       </header>
 
@@ -139,7 +139,7 @@ export default function Home() {
           <div className="eyebrow"><span className="eyebrow-line" /> A NEW WAY TO BE HEARD</div>
           <h1>Giving<br />everyone <em>a voice.</em></h1>
           <p className="hero-description">A little more independence. A little more connection. Amplify is exploring a new way for people with speech impairments to express what matters.</p>
-          <div className="hero-actions"><a href="#experience" className="button-primary">Explore the experience <Arrow /></a><a href="#how-it-works" className="text-link">Get to know Amplify <span>↓</span></a></div>
+          <div className="hero-actions"><a href="#experience" className="button-primary">Explore the experience <Arrow /></a><a href="#how-it-works" className="text-link">Get to know Amplify <span>↓</span></a><a href="/demo" className="text-link">Try the simulator <Arrow /></a></div>
           <div className="hero-caption"><span className="caption-icon">✳</span><span>Built around the person.<br /><b>Designed for everyday life.</b></span></div>
         </motion.div>
         <motion.div className="hero-visual" initial={reduceMotion ? false : { opacity: 0, scale: .97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .9, delay: .12, ease: [0.22, 1, 0.36, 1] }}>

@@ -5,27 +5,30 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { phrases } from "./phrases";
 import { publishStorageFallback, SIMULATOR_CHANNEL, SIMULATOR_STORAGE_KEY, type SimulatorMessage } from "./channel";
 
-function speak(message: string) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(message);
-  utterance.rate = 0.82;
-  window.speechSynthesis.speak(utterance);
-}
-
 export default function CommunicationSimulator() {
   const reduceMotion = useReducedMotion();
   const boardRef = useRef<HTMLDivElement>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
   const channelRef = useRef<BroadcastChannel | null>(null);
   const lastMessageId = useRef("");
+  const lastSpokenMessageId = useRef("");
   const connectionTimer = useRef<number | null>(null);
   const popupTimer = useRef<number | null>(null);
   const [cursorIndex, setCursorIndex] = useState(0);
   const [cursorPoint, setCursorPoint] = useState({ x: 0, y: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [popupIndex, setPopupIndex] = useState<number | null>(null);
+  const [speechRequest, setSpeechRequest] = useState<{ index: number; id: string } | null>(null);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [phoneConnected, setPhoneConnected] = useState(false);
+
+  const speakPhrase = (index: number) => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(phrases[index].label);
+    utterance.rate = 0.82;
+    window.speechSynthesis.speak(utterance);
+  };
 
   const updateCursorPoint = useCallback((index: number) => {
     const board = boardRef.current;
@@ -54,9 +57,29 @@ export default function CommunicationSimulator() {
     setPopupIndex(index);
     popupTimer.current = window.setTimeout(() => setPopupIndex(null), 3600);
     setCursorIndex(index);
+    setSpeechRequest({ index, id: message.id });
     setPhoneConnected(true);
-    speak(phrases[index].label);
   }, []);
+
+  useEffect(() => {
+    if (!voiceEnabled || !speechRequest || !("speechSynthesis" in window)) return;
+    if (lastSpokenMessageId.current === speechRequest.id) return;
+    lastSpokenMessageId.current = speechRequest.id;
+    speakPhrase(speechRequest.index);
+  }, [speechRequest, voiceEnabled]);
+
+  const enableVoice = () => {
+    setVoiceEnabled(true);
+    if (!("speechSynthesis" in window)) return;
+    if (speechRequest) {
+      lastSpokenMessageId.current = speechRequest.id;
+      speakPhrase(speechRequest.index);
+      return;
+    }
+    const unlock = new SpeechSynthesisUtterance(" ");
+    unlock.volume = 0;
+    window.speechSynthesis.speak(unlock);
+  };
 
   useEffect(() => {
     updateCursorPoint(cursorIndex);
@@ -103,11 +126,11 @@ export default function CommunicationSimulator() {
           </div>
           {popupIndex !== null && <motion.div className="communication-popup" role="status" aria-live="assertive" initial={{ opacity: 0, y: 18, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }}>
             <span className="communication-popup-icon" aria-hidden="true">{phrases[popupIndex].icon}</span>
-            <span className="communication-popup-copy"><small>MESSAGE SPOKEN</small><strong>{phrases[popupIndex].label}</strong></span>
+            <span className="communication-popup-copy"><small>{voiceEnabled ? "MESSAGE SPOKEN" : "MESSAGE SELECTED"}</small><strong>{phrases[popupIndex].label}</strong></span>
             <span className="communication-popup-sound" aria-hidden="true"><i /><i /><i /></span>
             <button type="button" className="communication-popup-close" onClick={() => setPopupIndex(null)} aria-label="Dismiss message">×</button>
           </motion.div>}
-          <div className="board-status" aria-live="polite"><span className={phoneConnected ? "status-connected" : "status-disconnected"} />{selectedIndex !== null ? `“${phrases[selectedIndex].label}”` : phoneConnected ? "Ready" : "Waiting for phone app"}</div>
+          <div className="board-status" aria-live="polite"><span className={phoneConnected ? "status-connected" : "status-disconnected"} />{selectedIndex !== null ? `“${phrases[selectedIndex].label}”` : phoneConnected ? "Ready" : "Waiting for phone app"}<button type="button" className={`board-voice-toggle ${voiceEnabled ? "voice-enabled" : ""}`} onClick={enableVoice} aria-pressed={voiceEnabled}>{voiceEnabled ? "Voice on" : "Enable voice"}</button></div>
         </div>
       </section>
     </main>

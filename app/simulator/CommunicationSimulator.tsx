@@ -68,14 +68,13 @@ export default function CommunicationSimulator() {
   }, [cursorIndex, updateCursorPoint]);
 
   useEffect(() => {
-    if (reduceMotion) return;
     const interval = window.setInterval(() => setCursorIndex((current) => {
       let next = Math.floor(Math.random() * phrases.length);
       if (next === current) next = (next + 1) % phrases.length;
       return next;
     }), 5000);
     return () => window.clearInterval(interval);
-  }, [reduceMotion]);
+  }, []);
 
   useEffect(() => {
     const channel = "BroadcastChannel" in window ? new BroadcastChannel(SIMULATOR_CHANNEL) : null;

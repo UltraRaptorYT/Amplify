@@ -68,13 +68,14 @@ export default function CommunicationSimulator() {
   }, [cursorIndex, updateCursorPoint]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => setCursorIndex((current) => {
+    // Allow the cursor to finish its 2s glide, then dwell on that tile for 10s.
+    const timeout = window.setTimeout(() => setCursorIndex((current) => {
       let next = Math.floor(Math.random() * phrases.length);
       if (next === current) next = (next + 1) % phrases.length;
       return next;
-    }), 5000);
-    return () => window.clearInterval(interval);
-  }, []);
+    }), reduceMotion ? 10000 : 12000);
+    return () => window.clearTimeout(timeout);
+  }, [cursorIndex, reduceMotion]);
 
   useEffect(() => {
     const channel = "BroadcastChannel" in window ? new BroadcastChannel(SIMULATOR_CHANNEL) : null;

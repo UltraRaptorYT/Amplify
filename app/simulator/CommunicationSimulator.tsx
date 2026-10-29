@@ -20,9 +20,11 @@ export default function CommunicationSimulator() {
   const channelRef = useRef<BroadcastChannel | null>(null);
   const lastMessageId = useRef("");
   const connectionTimer = useRef<number | null>(null);
+  const popupTimer = useRef<number | null>(null);
   const [cursorIndex, setCursorIndex] = useState(0);
   const [cursorPoint, setCursorPoint] = useState({ x: 0, y: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [popupIndex, setPopupIndex] = useState<number | null>(null);
   const [phoneConnected, setPhoneConnected] = useState(false);
 
   const updateCursorPoint = useCallback((index: number) => {
@@ -47,7 +49,10 @@ export default function CommunicationSimulator() {
     if (message.type !== "phrase-selected" || message.id === lastMessageId.current) return;
     lastMessageId.current = message.id;
     const index = Math.max(0, Math.min(phrases.length - 1, message.phraseIndex));
+    if (popupTimer.current) window.clearTimeout(popupTimer.current);
     setSelectedIndex(index);
+    setPopupIndex(index);
+    popupTimer.current = window.setTimeout(() => setPopupIndex(null), 3600);
     setCursorIndex(index);
     setPhoneConnected(true);
     speak(phrases[index].label);
@@ -81,7 +86,7 @@ export default function CommunicationSimulator() {
       try { acceptMessage(JSON.parse(event.newValue) as SimulatorMessage); } catch { /* Ignore malformed local demo events. */ }
     };
     window.addEventListener("storage", onStorage);
-    return () => { channel?.close(); channelRef.current = null; window.removeEventListener("storage", onStorage); if (connectionTimer.current) window.clearTimeout(connectionTimer.current); window.speechSynthesis?.cancel(); };
+    return () => { channel?.close(); channelRef.current = null; window.removeEventListener("storage", onStorage); if (connectionTimer.current) window.clearTimeout(connectionTimer.current); if (popupTimer.current) window.clearTimeout(popupTimer.current); window.speechSynthesis?.cancel(); };
   }, [acceptMessage]);
 
   return (
@@ -96,6 +101,12 @@ export default function CommunicationSimulator() {
             </div>
             <motion.div className={`board-cursor ${selectedIndex !== null ? "cursor-selected" : ""}`} aria-hidden="true" animate={{ x: cursorPoint.x - 15, y: cursorPoint.y - 15 }} transition={reduceMotion ? { duration: 0 } : { duration: selectedIndex === null ? 2 : 1.8, ease: "easeInOut" }}><span /></motion.div>
           </div>
+          {popupIndex !== null && <motion.div className="communication-popup" role="status" aria-live="assertive" initial={{ opacity: 0, y: 18, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }}>
+            <span className="communication-popup-icon" aria-hidden="true">{phrases[popupIndex].icon}</span>
+            <span className="communication-popup-copy"><small>MESSAGE SPOKEN</small><strong>{phrases[popupIndex].label}</strong></span>
+            <span className="communication-popup-sound" aria-hidden="true"><i /><i /><i /></span>
+            <button type="button" className="communication-popup-close" onClick={() => setPopupIndex(null)} aria-label="Dismiss message">×</button>
+          </motion.div>}
           <div className="board-status" aria-live="polite"><span className={phoneConnected ? "status-connected" : "status-disconnected"} />{selectedIndex !== null ? `“${phrases[selectedIndex].label}”` : phoneConnected ? "Ready" : "Waiting for phone app"}</div>
         </div>
       </section>
